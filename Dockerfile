@@ -8,7 +8,6 @@ RUN go mod download  \
 
 WORKDIR /app
 
-
 # use debug because we need a shell (busybox)
 FROM gcr.io/distroless/base:debug 
 COPY --from=builder /bin/nc /bin/nc

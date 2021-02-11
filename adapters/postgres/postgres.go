@@ -1064,6 +1064,15 @@ func GetQueryOperator(op string) (string, error) {
 		return "LIKE", nil
 	case "ilike":
 		return "ILIKE", nil
+	// ltree operators
+	case "ltanc":
+		return "@>", nil
+	case "ltdesc":
+		return "<@", nil
+	case "ltmatch":
+		return "~", nil
+	case "ltftxt":
+		return "@", nil
 	}
 
 	err := errors.New("Invalid operator")
@@ -1289,17 +1298,24 @@ func (adapter *Postgres) GroupByClause(r *http.Request) (groupBySQL string) {
 func NormalizeGroupFunction(paramValue string) (groupFuncSQL string, err error) {
 	values := strings.Split(paramValue, ":")
 	groupFunc := strings.ToUpper(values[0])
+	// values[1] it's a field in table
+	v := values[1]
+	if v != "*" {
+		values[1] = fmt.Sprintf(`"%s"`, v)
+	}
 	switch groupFunc {
-	case "SUM", "AVG", "MAX", "MIN", "MEDIAN", "STDDEV", "VARIANCE":
-		// values[1] it's a field in table
-		v := values[1]
-		if v != "*" {
-			values[1] = fmt.Sprintf(`"%s"`, v)
-		}
+	case "SUM", "AVG", "MAX", "MIN", "MEDIAN", "STDDEV", "VARIANCE", "NLEVEL":
 		groupFuncSQL = fmt.Sprintf(`%s(%s)`, groupFunc, values[1])
 		if len(values) == 3 {
 			groupFuncSQL = fmt.Sprintf(`%s AS "%s"`, groupFuncSQL, values[2])
 		}
+		return
+	case "SUBLTREE", "SUBPATH":
+		v := values[2]
+		values[2] = fmt.Sprintf(`"%s"`, v)
+		v = values[3]
+		values[3] = fmt.Sprintf(`"%s"`, v)
+		groupFuncSQL = fmt.Sprintf(`%s(%s,%s,%s)`, groupFuncSQL, values[1], values[2], values[3])
 		return
 	default:
 		err = fmt.Errorf("this function %s is not a valid group function", groupFunc)
