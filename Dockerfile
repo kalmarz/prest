@@ -1,5 +1,9 @@
 FROM registry.hub.docker.com/library/golang:1.15 as builder
 
+# ARG TARGETOS
+# ARG TARGETARCH
+# && CGO_ENABLED=1 GOOS=$TARGETOS GOARCH=$TARGETARCH GO111MODULE=on go build -ldflags "-s -w" -o prestd cmd/prestd/main.go \
+
 WORKDIR /workspace
 COPY . .
 RUN go mod download  \
