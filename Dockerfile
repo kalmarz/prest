@@ -1,13 +1,14 @@
-FROM registry.hub.docker.com/library/golang:1.15 as builder
+FROM registry.hub.docker.com/library/golang:1.16 as builder
 
-# ARG TARGETOS
-# ARG TARGETARCH
-# && CGO_ENABLED=1 GOOS=$TARGETOS GOARCH=$TARGETARCH GO111MODULE=on go build -ldflags "-s -w" -o prestd cmd/prestd/main.go \
+ARG TARGETOS
+ARG TARGETARCH
+
+# && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -ldflags "-s -w" -o prestd cmd/prestd/main.go \
 
 WORKDIR /workspace
 COPY . .
 RUN go mod download  \
-&& CGO_ENABLED=1 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -ldflags "-s -w" -o prestd cmd/prestd/main.go \
+&& CGO_ENABLED=1 GOOS=$TARGETOS GOARCH=$TARGETARCH GO111MODULE=on go build -ldflags "-s -w" -o prestd cmd/prestd/main.go \
 && apt-get update && apt-get install --no-install-recommends -yq netcat=1.10-41.1
 
 WORKDIR /app
